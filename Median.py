@@ -384,9 +384,3 @@ class Median:
 
         # slow program down a bit, makes the output more readable
         time.sleep(0.03)
-
-    def Main(self):
-        t1 = Thread(target=self., args=("TEST1", 3))
-
-if __name__ == "__main__":
-
