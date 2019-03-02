@@ -1,23 +1,3 @@
-'''
-import web
-from threading import Thread
-
-
-urls = (
-    '/', 'index'
-)
-
-class index:
-    def GET(self):
-        return str(23)
-
-
-class indexVar:
-    def __init__(self):
-        Thread.__init__(self)
-        self.daemon = True
-        self.start()
-'''
 from threading import Thread
 import web
 import time
