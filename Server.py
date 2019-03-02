@@ -29,8 +29,6 @@ class Index:
         gyr_y = IMU.readACCy()
         gyr_z = IMU.readACCz()
 
-        print(str(get_x_rotation(gyr_x,gyr_y,gyr_z)) + " " + str(get_y_rotation(gyr_x,gyr_y,gyr_z)))
-
         return str(get_x_rotation(gyr_x,gyr_y,gyr_z)) + " " + str(get_y_rotation(gyr_x,gyr_y,gyr_z))
         return " " + str(IMU.readGYRx()) + " " + str(IMU.readGYRy()) + " " + str(IMU.readGYRz())
         return " " + str(berryIMU.gyroXangle) + " " + str(berryIMU.gyroYangle) + " " + str(berryIMU.gyroZangle)
