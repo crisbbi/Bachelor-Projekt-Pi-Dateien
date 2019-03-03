@@ -16,7 +16,7 @@ globalKalman.initglobalKalmanY()
 print("globalKalman.Y")
 globalKalman.initGyrXangle()
 
-readValues = threading.Thread(target = berryIMU.runKalmanThread())
+readValues = threading.Thread(target = berryIMU.readAndComputeSensorValues())
 # debugging
 print("berry start")
 initServer()
