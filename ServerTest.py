@@ -2,9 +2,6 @@ import web
 import datetime
 from threading import Thread
 from flask import Flask
-app = Flask(__name__)
-
-
 import sys
 import time
 import math
@@ -36,39 +33,16 @@ magXmax = 0
 magYmax = 0
 magZmax = 0
 
+# real measured values
+# run callibrateIMU.py for new values
+magXmin =  -845
+magYmin =  -769
+magZmin =  -1303
+magXmax =  1489
+magYmax =  1563
+magZmax =  350
 
-#Here is an example:
-magXmin =  -1492
-magYmin =  -1439
-magZmin =  -2137
-magXmax =  1918
-magYmax =  1763
-magZmax =  818
-#Dont use the above values, these are just an example.
-
-
-# Kalman filter variables
-Q_angle = 0.02
-Q_gyro = 0.0015
-R_angle = 0.005
-y_bias = 0.0
-x_bias = 0.0
-XP_00 = 0.0
-XP_01 = 0.0
-XP_10 = 0.0
-XP_11 = 0.0
-YP_00 = 0.0
-YP_01 = 0.0
-YP_10 = 0.0
-YP_11 = 0.0
-KFangleX = 0.0
-KFangleY = 0.0
-
-
-'''
-
-# Variables under the Kalman Filtering IMU
-'''
+# Variables for simpler measurement calculations/filters
 gyroXangle = 0.0
 gyroYangle = 0.0
 gyroZangle = 0.0
@@ -76,8 +50,6 @@ CFangleX = 0.0
 CFangleY = 0.0
 CFangleXFiltered = 0.0
 CFangleYFiltered = 0.0
-kalmanX = 0.0
-kalmanY = 0.0
 oldXMagRawValue = 0
 oldYMagRawValue = 0
 oldZMagRawValue = 0
@@ -85,113 +57,21 @@ oldXAccRawValue = 0
 oldYAccRawValue = 0
 oldZAccRawValue = 0
 
+# used for loop period calculation in berechnung()
 a = datetime.datetime.now()
 
-
-# Setup the tables for the mdeian filter. Fill them all with '1' soe we dont get devide by zero error
-acc_medianTable1X = [1] * ACC_MEDIANTABLESIZE
-acc_medianTable1Y = [1] * ACC_MEDIANTABLESIZE
-acc_medianTable1Z = [1] * ACC_MEDIANTABLESIZE
-acc_medianTable2X = [1] * ACC_MEDIANTABLESIZE
-acc_medianTable2Y = [1] * ACC_MEDIANTABLESIZE
-acc_medianTable2Z = [1] * ACC_MEDIANTABLESIZE
-mag_medianTable1X = [1] * MAG_MEDIANTABLESIZE
-mag_medianTable1Y = [1] * MAG_MEDIANTABLESIZE
-mag_medianTable1Z = [1] * MAG_MEDIANTABLESIZE
-mag_medianTable2X = [1] * MAG_MEDIANTABLESIZE
-mag_medianTable2Y = [1] * MAG_MEDIANTABLESIZE
-mag_medianTable2Z = [1] * MAG_MEDIANTABLESIZE
-
-#IMU.detectIMU()  # Detect if BerryIMUv1 or BerryIMUv2 is connected.
-IMU.initIMU()  # Initialise the accelerometer, gyroscope and compass
-
-
+# Detect if BerryIMUv1 or BerryIMUv2 is connected
+IMU.detectIMU()
+# Initialise the accelerometer, gyroscope and compass
+IMU.initIMU()
 
 urls = (
     '/', 'index'
 )
 
-kalmanOut = 0
-kalmanOut1 = 0
-
 class index:
 
-    # Low Pass Filter + Kalman Filter IMU
-
-    def kalmanFilterY(self, accAngle, gyroRate, DT):
-        y = 0.0
-        S = 0.0
-
-        global KFangleY
-        global Q_angle
-        global Q_gyro
-        global y_bias
-        global YP_00
-        global YP_01
-        global YP_10
-        global YP_11
-        global R_angle
-
-        KFangleY = KFangleY + DT * (gyroRate - y_bias)
-
-        YP_00 = YP_00 + (- DT * (YP_10 + YP_01) + Q_angle * DT)
-        YP_01 = YP_01 + (- DT * YP_11)
-        YP_10 = YP_10 + (- DT * YP_11)
-        YP_11 = YP_11 + (+ Q_gyro * DT)
-
-        y = accAngle - KFangleY
-        S = YP_00 + R_angle
-        K_0 = YP_00 / S
-        K_1 = YP_10 / S
-
-        KFangleY = KFangleY + (K_0 * y)
-        y_bias = y_bias + (K_1 * y)
-
-        YP_00 = YP_00 - (K_0 * YP_00)
-        YP_01 = YP_01 - (K_0 * YP_01)
-        YP_10 = YP_10 - (K_1 * YP_00)
-        YP_11 = YP_11 - (K_1 * YP_01)
-
-        return KFangleY
-
-    def kalmanFilterX(self, accAngle, gyroRate, DT):
-        x = 0.0
-        S = 0.0
-
-        global KFangleX
-        global Q_angle
-        global Q_gyro
-        global x_bias
-        global XP_00
-        global XP_01
-        global XP_10
-        global XP_11
-
-        KFangleX = KFangleX + DT * (gyroRate - x_bias)
-
-        XP_00 = XP_00 + (- DT * (XP_10 + XP_01) + Q_angle * DT)
-        XP_01 = XP_01 + (- DT * XP_11)
-        XP_10 = XP_10 + (- DT * XP_11)
-        XP_11 = XP_11 + (+ Q_gyro * DT)
-
-        x = accAngle - KFangleX
-        S = XP_00 + R_angle
-        K_0 = XP_00 / S
-        K_1 = XP_10 / S
-
-        KFangleX = KFangleX + (K_0 * x)
-        x_bias = x_bias + (K_1 * x)
-
-        XP_00 = XP_00 - (K_0 * XP_00)
-        XP_01 = XP_01 - (K_0 * XP_01)
-        XP_10 = XP_10 - (K_1 * XP_00)
-        XP_11 = XP_11 - (K_1 * XP_01)
-
-        return KFangleX
-
     def berechnung(self):
-        global kalmanOut
-        global kalmanOut1
         while True:
             global gyroXangle
             global gyroYangle
@@ -205,8 +85,6 @@ class index:
             global oldZAccRawValue
             global CFangleX
             global CFangleY
-            global kalmanX
-            global kalmanY
 
             # Read the accelerometer,gyroscope and magnetometer values
             ACCx = IMU.readACCx()
@@ -224,7 +102,7 @@ class index:
             MAGy -= (magYmin + magYmax) / 2
             MAGz -= (magZmin + magZmax) / 2
 
-            ##Calculate loop Period(LP). How long between Gyro Reads
+            # Calculate loop Period(LP). How long between Gyro Reads
             b = datetime.datetime.now() - a
             a = datetime.datetime.now()
             LP = b.microseconds / (1000000 * 1.0)
@@ -246,64 +124,6 @@ class index:
             oldXAccRawValue = ACCx
             oldYAccRawValue = ACCy
             oldZAccRawValue = ACCz
-
-            #########################################
-            #### Median filter for accelerometer ####
-            #########################################
-            # cycle the table
-            for x in range(ACC_MEDIANTABLESIZE - 1, 0, -1):
-                acc_medianTable1X[x] = acc_medianTable1X[x - 1]
-                acc_medianTable1Y[x] = acc_medianTable1Y[x - 1]
-                acc_medianTable1Z[x] = acc_medianTable1Z[x - 1]
-
-            # Insert the lates values
-            acc_medianTable1X[0] = ACCx
-            acc_medianTable1Y[0] = ACCy
-            acc_medianTable1Z[0] = ACCz
-
-            # Copy the tables
-            acc_medianTable2X = acc_medianTable1X[:]
-            acc_medianTable2Y = acc_medianTable1Y[:]
-            acc_medianTable2Z = acc_medianTable1Z[:]
-
-            # Sort table 2
-            acc_medianTable2X.sort()
-            acc_medianTable2Y.sort()
-            acc_medianTable2Z.sort()
-
-            # The middle value is the value we are interested in
-            ACCx = acc_medianTable2X[ACC_MEDIANTABLESIZE // 2];
-            ACCy = acc_medianTable2Y[ACC_MEDIANTABLESIZE // 2];
-            ACCz = acc_medianTable2Z[ACC_MEDIANTABLESIZE // 2];
-
-            #########################################
-            #### Median filter for magnetometer ####
-            #########################################
-            # cycle the table
-            for x in range(MAG_MEDIANTABLESIZE - 1, 0, -1):
-                mag_medianTable1X[x] = mag_medianTable1X[x - 1]
-                mag_medianTable1Y[x] = mag_medianTable1Y[x - 1]
-                mag_medianTable1Z[x] = mag_medianTable1Z[x - 1]
-
-            # Insert the latest values
-            mag_medianTable1X[0] = MAGx
-            mag_medianTable1Y[0] = MAGy
-            mag_medianTable1Z[0] = MAGz
-
-            # Copy the tables
-            mag_medianTable2X = mag_medianTable1X[:]
-            mag_medianTable2Y = mag_medianTable1Y[:]
-            mag_medianTable2Z = mag_medianTable1Z[:]
-
-            # Sort table 2
-            mag_medianTable2X.sort()
-            mag_medianTable2Y.sort()
-            mag_medianTable2Z.sort()
-
-            # The middle value is the value we are interested in
-            MAGx = mag_medianTable2X[MAG_MEDIANTABLESIZE // 2];
-            MAGy = mag_medianTable2Y[MAG_MEDIANTABLESIZE // 2];
-            MAGz = mag_medianTable2Z[MAG_MEDIANTABLESIZE // 2];
 
             # Convert Gyro raw to degrees per second
             rate_gyr_x = GYRx * G_GAIN
@@ -337,11 +157,6 @@ class index:
             CFangleX = AA * (CFangleX + rate_gyr_x * LP) + (1 - AA) * AccXangle
             CFangleY = AA * (CFangleY + rate_gyr_y * LP) + (1 - AA) * AccYangle
 
-            # Kalman filter used to combine the accelerometer and gyro values.
-            # Kalman filter used to combine the accelerometer and gyro values.
-            kalmanY = self.kalmanFilterY(AccYangle, rate_gyr_y, LP)
-            kalmanX = self.kalmanFilterX(AccXangle, rate_gyr_x, LP)
-
             if IMU_UPSIDE_DOWN:
                 MAGy = -MAGy  # If IMU is upside down, this is needed to get correct heading.
             # Calculate heading
@@ -365,7 +180,6 @@ class index:
                 accYnorm = ACCy / math.sqrt(ACCx * ACCx + ACCy * ACCy + ACCz * ACCz)
 
             # Calculate pitch and roll
-
             pitch = math.asin(accXnorm)
             roll = -math.asin(accYnorm / math.cos(pitch))
 
@@ -374,7 +188,6 @@ class index:
 
             # The compass and accelerometer are orientated differently on the LSM9DS0 and LSM9DS1 and the Z axis on the compass
             # is also reversed. This needs to be taken into consideration when performing the calculations
-
             magYcomp = MAGx * math.sin(roll) * math.sin(pitch) + MAGy * math.cos(roll) + MAGz * math.sin(
                     roll) * math.cos(
                     pitch)  # LSM9DS1
@@ -387,13 +200,10 @@ class index:
 
             ############################ END ##################################
 
-            #if 0:			#Change to '0' to stop  showing the angles from the Kalman filter
-                #print ("# kalmanX %5.2f   kalmanY %5.2f #" % (kalmanX,kalmanY)),
             #print a new line
             print("")
-            kalmanOut = kalmanX
-            kalmanOut1 = kalmanY
-            print(str(kalmanX) + "," + str(kalmanY))
+            print(str(gyroXangle) + "," + str(gyroYangle))
+
             #slow program down a bit, makes the output more readable
             time.sleep(0.03)
 
@@ -402,17 +212,15 @@ class index:
         t1 = Thread(target=self.berechnung)
         t1.start()
 
-
+#configure server
+app = Flask(__name__)
 @app.route('/')
 def hello_world():
-    global kalmanOut
-    global kalmanOut1
-    return str(kalmanOut) + "," + str(kalmanOut1)
-
+    global gyroXangle
+    global gyroYangle
+    return str(gyroXangle) + "," + str(gyroYangle)
 
 if __name__ == "__main__":
     t = index()
     t.threading()
-#   app = web.application(urls, globals())
-#   app.run()
     app.run(host='0.0.0.0', port=8080)
