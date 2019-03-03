@@ -189,7 +189,7 @@ class index:
 
         return KFangleX
 
-    def berechnung(self, thread, delay):
+    def berechnung(self):
         global kalmanOut
         global kalmanOut1
         while True:
@@ -399,7 +399,7 @@ class index:
 
 
     def threading(self):
-        t1 = Thread(target=self.berechnung, args=("TEst",1))
+        t1 = Thread(target=self.berechnung)
         t1.start()
 
 
