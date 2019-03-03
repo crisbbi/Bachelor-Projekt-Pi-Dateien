@@ -8,15 +8,16 @@ import globalKalman
 import threading
 from Server import initServer
 
-globalKalman.initGlobalKalmanX()
 # debugging
-print("globalKalman.X")
-globalKalman.initglobalKalmanY()
-# debugging
-print("globalKalman.Y")
+print("globalKalman.gyrX")
 globalKalman.initGyrXangle()
+globalKalman.initGyrYangle()
+globalKalman.initGyrZangle()
 
-readValues = threading.Thread(target = berryIMU.readAndComputeSensorValues())
+readValues = berryIMU.Sensor()
+
+print("server start")
+
+readValues.start()
+print("readValues start")
 # debugging
-print("berry start")
-initServer()
