@@ -211,7 +211,8 @@ def hello_world():
     global AccXangle
     global AccYangle
     global AccZangle
-    return str(gyroXangle) + "," + str(gyroYangle)
+
+    return str(gyroXangle) + "," + str(gyroYangle) + "," + str(AccXangle) + "," + str(AccYangle) + "," + str(AccZangle)
 
 if __name__ == "__main__":
     t = index()
