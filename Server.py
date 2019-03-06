@@ -107,9 +107,6 @@ class index:
             MAGy = MAGy * MAG_LPF_FACTOR + oldYMagRawValue * (1 - MAG_LPF_FACTOR)
             MAGz = MAGz * MAG_LPF_FACTOR + oldZMagRawValue * (1 - MAG_LPF_FACTOR)
             MAGx = MAGx * MAG_LPF_FACTOR + oldXMagRawValue * (1 - MAG_LPF_FACTOR)
-            ACCx = ACCx * ACC_LPF_FACTOR + oldXAccRawValue * (1 - ACC_LPF_FACTOR)
-            ACCy = ACCy * ACC_LPF_FACTOR + oldYAccRawValue * (1 - ACC_LPF_FACTOR)
-            ACCz = ACCz * ACC_LPF_FACTOR + oldZAccRawValue * (1 - ACC_LPF_FACTOR)
 
             oldXMagRawValue = MAGx
             oldYMagRawValue = MAGy
@@ -211,6 +208,9 @@ app = Flask(__name__)
 def hello_world():
     global gyroXangle
     global gyroYangle
+    global AccXangle
+    global AccYangle
+    global AccZangle
     return str(gyroXangle) + "," + str(gyroYangle)
 
 if __name__ == "__main__":
