@@ -69,6 +69,8 @@ class index:
             global gyroXangle
             global gyroYangle
             global gyroZangle
+            global AccXangle
+            global AccYangle
             global a
             global oldXMagRawValue
             global oldYMagRawValue
@@ -210,9 +212,8 @@ def hello_world():
     global gyroYangle
     global AccXangle
     global AccYangle
-    global AccZangle
 
-    return str(gyroXangle) + "," + str(gyroYangle) + "," + str(AccXangle) + "," + str(AccYangle) + "," + str(AccZangle)
+    return str(gyroXangle) + "," + str(gyroYangle) + "," + str(AccXangle) + "," + str(AccYangle)
 
 if __name__ == "__main__":
     t = index()
